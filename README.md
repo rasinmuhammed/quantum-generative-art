@@ -1,10 +1,17 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Powered%20by-IBM%20Quantum-052FAD?style=for-the-badge&logo=ibm&logoColor=white" alt="Powered by IBM Quantum">
+  <img src="https://img.shields.io/badge/Built%20with-Qiskit-6929C4?style=for-the-badge&logo=qiskit&logoColor=white" alt="Built with Qiskit">
+  <img src="https://img.shields.io/badge/Visualization-p5.js-ED225D?style=for-the-badge&logo=p5.js&logoColor=white" alt="p5.js">
+  <img src="https://img.shields.io/github/license/rasinmuhammed/quantum-generative-art?style=for-the-badge" alt="License">
+</p>
+
 # The Quantum Canvas
 
-**Turn any name into a unique quantum universe.**
+**Transform any name into a unique quantum universe.**
 
 Every person's name, processed through a 5-qubit quantum circuit, produces a one-of-a-kind visualization. The probability distribution from 100 quantum measurements becomes a living planetary system where physics determines beauty.
 
-🔗 **[Live Demo](https://rasinmuhammed.github.io/quantum-generative-art/)** *(after running on real quantum hardware)*
+🔗 **[Live Demo](https://rasinmuhammed.github.io/quantum-generative-art/)** 
 
 ---
 
@@ -162,7 +169,7 @@ print(result.num_states)  # Number of unique states measured
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
