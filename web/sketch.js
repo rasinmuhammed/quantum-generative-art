@@ -22,6 +22,7 @@ let quantumData = null;
 let loadError = false;
 let particles = [];
 let stars = [];
+let shootingStars = [];
 let nebulaClouds = [];
 let time = 0;
 let hoveredParticle = null;
@@ -38,7 +39,8 @@ const CONFIG = {
     maxParticleSize: 70,
     springStrength: 0.06,
     dragDamping: 0.9,
-    starCount: 400
+    starCount: 400,
+    shootingStarChance: 0.003  // Chance per frame to spawn a shooting star
 };
 
 // A palette inspired by deep space and quantum phenomena
@@ -108,6 +110,114 @@ class Star {
             line(this.x, this.y - spikeLen, this.x, this.y + spikeLen);
         }
         pop();
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ShootingStar: A fleeting wish streaking across the cosmos
+// ═══════════════════════════════════════════════════════════════════════════
+
+class ShootingStar {
+    constructor(w, h) {
+        // Start from edges, travel diagonally inward
+        const edge = floor(random(4));
+        if (edge === 0) { // Top
+            this.x = random(w);
+            this.y = -20;
+        } else if (edge === 1) { // Right
+            this.x = w + 20;
+            this.y = random(h * 0.5);
+        } else if (edge === 2) { // Left
+            this.x = -20;
+            this.y = random(h * 0.5);
+        } else { // Top corners
+            this.x = random() > 0.5 ? random(w * 0.3) : w - random(w * 0.3);
+            this.y = -20;
+        }
+
+        // Velocity: fast diagonal motion
+        const angle = random(PI * 0.15, PI * 0.35);  // Downward angle
+        const speed = random(12, 22);
+        const direction = this.x > w / 2 ? PI - angle : angle;
+        this.vx = cos(direction) * speed * (this.x > w / 2 ? -1 : 1);
+        this.vy = sin(angle) * speed;
+
+        // Visual properties
+        this.length = random(80, 180);
+        this.thickness = random(1.5, 3.5);
+        this.life = 1.0;
+        this.decay = random(0.012, 0.025);
+
+        // Color: golden white with hints of blue
+        this.hue = random() > 0.7 ? random(200, 240) : random(30, 50);
+
+        // Trail history
+        this.trail = [];
+        this.maxTrail = floor(this.length / 4);
+    }
+
+    update() {
+        // Store trail
+        this.trail.push({ x: this.x, y: this.y, life: this.life });
+        if (this.trail.length > this.maxTrail) this.trail.shift();
+
+        // Move
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Add slight gravity curve
+        this.vy += 0.08;
+
+        // Fade out
+        this.life -= this.decay;
+    }
+
+    draw() {
+        if (this.life <= 0) return;
+
+        push();
+        colorMode(HSB, 360, 100, 100, 1);
+
+        // Draw luminous trail
+        noFill();
+        beginShape();
+        for (let i = 0; i < this.trail.length; i++) {
+            const t = this.trail[i];
+            const progress = i / this.trail.length;
+            const alpha = progress * t.life * 0.6;
+            const weight = progress * this.thickness;
+
+            stroke(this.hue, 20, 100, alpha);
+            strokeWeight(weight);
+            vertex(t.x, t.y);
+        }
+        endShape();
+
+        // Draw the bright head
+        const headAlpha = this.life;
+        const headSize = this.thickness * 2.5;
+
+        // Outer glow
+        noStroke();
+        for (let i = 4; i >= 1; i--) {
+            fill(this.hue, 15, 100, (headAlpha * 0.2) / i);
+            circle(this.x, this.y, headSize * (1 + i * 1.5));
+        }
+
+        // Bright core
+        fill(0, 0, 100, headAlpha);
+        circle(this.x, this.y, headSize);
+
+        // Inner sparkle
+        fill(this.hue, 30, 100, headAlpha * 0.8);
+        circle(this.x, this.y, headSize * 0.5);
+
+        pop();
+    }
+
+    isDead() {
+        return this.life <= 0 || this.y > height + 50 || this.x < -100 || this.x > width + 100;
     }
 }
 
@@ -515,8 +625,25 @@ function drawSpaceBackground() {
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, width, height);
 
+    // Draw nebula clouds (behind everything)
     for (const cloud of nebulaClouds) cloud.draw(time);
+
+    // Draw twinkling stars
     for (const star of stars) star.draw(time);
+
+    // Spawn new shooting stars randomly
+    if (random() < CONFIG.shootingStarChance && shootingStars.length < 3) {
+        shootingStars.push(new ShootingStar(width, height));
+    }
+
+    // Update and draw shooting stars
+    for (const ss of shootingStars) {
+        ss.update();
+        ss.draw();
+    }
+
+    // Remove dead shooting stars
+    shootingStars = shootingStars.filter(ss => !ss.isDead());
 }
 
 /** Draw orbital paths as ethereal rings */
